@@ -53,6 +53,6 @@ nextApp.prepare().then(() => {
 	
 	server.listen(3000, err => {
 		if (err) process.exit(0)
-		console.log('ready...')
+		console.log('ready...', proces.env.NODE_ENV || '')
 	})
 })
