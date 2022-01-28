@@ -1,17 +1,17 @@
 const app = require('express')()
 const server = require('http').Server(app)
-const io = require('socket.io')(server)
-const next = require('next')
-
-const dev = process.env.NODE_ENV !== 'production'
-const nextApp = next({ dev })
-const nextHandler = nextApp.getRequestHandler()
+const { Server } = require('socket.io')
+const io = new Server(server, {
+	cors: { 
+		origin: ["http://localhost:3000", "https://hexaverse.netlify.app"]
+	}
+})
 
 const messages = []
 let players = []
 
 io.on('connection', socket => {
-	console.log('\x1b[32m%s\x1b[0m', socket.id, 'connected')
+	console.log('\x1b[32m%s\x1b[0m', socket.id.match(/^[\w]{5}/g)[0], 'connected')
 
 	/** Handle user movement */
 	socket.on('user data', userPosition => {
@@ -21,16 +21,10 @@ io.on('connection', socket => {
 		/** Add new user position to db */
 		players.push(userPosition)
 	})
-
-	/** Handle chat message */
-	// socket.on('chat message', data => {
-	// 	messages.push(data)
-	// 	io.emit('messages', messages)
-	// })
 	
 	/** Handle user disconnection */
 	socket.on('disconnect', () => {
-		console.log('\x1b[31m%s\x1b[0m', socket.id, 'disconnected')
+		console.log('\x1b[31m%s\x1b[0m', socket.id.match(/^[\w]{5}/g)[0], 'disconnected')
 		/** Remove disconnected user from temporal database */
 		players = players.filter(e=>e.id !== socket.id)
 	})
@@ -39,20 +33,15 @@ io.on('connection', socket => {
 /** Broadcast players positions 30 times per second */
 setInterval(() => { 
 	io.emit('players', players) 
-	// console.log(players.map(p=>p.id))
 }, 1000/30)
 
-nextApp.prepare().then(() => {
-	app.get('/messages', (req,res) => {
-		res.json(messages)
-	})
+app.get('/', (req, res) => {
+	console.log(res.header())
+	res.header('Access-Control-Allow-Origin','*')
+	res.json({msg:' hey'})
+})
 
-	app.get('*', (req, res) => {
-		return nextHandler(req, res)
-	})
-	
-	server.listen(3000, err => {
-		if (err) process.exit(0)
-		console.log('ready...', proces.env.NODE_ENV || '')
-	})
+server.listen(3001, err => {
+	if (err) process.exit(0)
+	console.log('ready...')
 })
