@@ -3,6 +3,7 @@ import { Player, PlayerMesh, UserInfo } from '../interfaces/hex.interface'
 import { Movement } from '../utils/player_movement'
 import GlobalThree from '../utils/global_three'
 import socket from '../utils/socket_service'
+import Head from 'next/head'
 
 export default function HomePage() {
 	const [ loginfo, setLoginfo ] = useState<UserInfo>()
@@ -87,10 +88,16 @@ export default function HomePage() {
 		setThree(new GlobalThree())
 	},[])
 
-	return <div className={`interface ${loginfo ? 'active' : ''}`}>
-		<form className="login" onSubmit={loginHandler}>
-			<input type="text" placeholder='Nickname' required />
-			<button type="submit">Enter</button>
-		</form>
-	</div>
+	return <>
+		<Head>
+			<title>Hexaverse</title>
+			<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+		</Head>
+		<div className={`interface ${loginfo ? 'active' : ''}`}>
+			<form className="login" onSubmit={loginHandler}>
+				<input type="text" placeholder='Nickname' required />
+				<button type="submit">Enter</button>
+			</form>
+		</div>
+	</>
 }
