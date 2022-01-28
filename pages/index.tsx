@@ -91,7 +91,7 @@ export default function HomePage() {
 	return <>
 		<Head>
 			<title>Hexaverse</title>
-			<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+			<meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
 		</Head>
 		<div className={`interface ${loginfo ? 'active' : ''}`}>
 			<form className="login" onSubmit={loginHandler}>
