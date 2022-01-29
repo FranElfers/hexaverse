@@ -43,5 +43,5 @@ app.get('/', (req, res) => {
 
 server.listen(3001, err => {
 	if (err) process.exit(0)
-	console.log('ready...')
+	console.log('ready on', 3001)
 })

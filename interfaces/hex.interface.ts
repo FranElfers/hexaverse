@@ -14,6 +14,7 @@ export interface Player extends UserBase {
 
 export interface PlayerMesh extends Player {
 	mesh: Mesh
+	nameMesh?: Mesh
 }
 
 export interface UserInfo extends UserBase {

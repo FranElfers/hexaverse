@@ -4,11 +4,15 @@ import { Movement } from '../utils/player_movement'
 import GlobalThree from '../utils/global_three'
 import socket from '../utils/socket_service'
 import Head from 'next/head'
+import { smoothOut } from '../utils/smooth_movement'
 
 export default function HomePage() {
 	const [ loginfo, setLoginfo ] = useState<UserInfo>()
 	const [ three, setThree ] = useState<GlobalThree>()
 	const playerMov: Movement = new Movement(0, 0)
+	let players: PlayerMesh[] = []
+	let nicknames: any[] = []
+
 
 	const loginHandler = (e: any) => {
 		e.preventDefault()
@@ -20,13 +24,9 @@ export default function HomePage() {
 		})
 	}
 
+	/** Socket.io */
 	useEffect(() => {
 		if (!three || !loginfo) return
-		let players: PlayerMesh[] = []
-
-		/** Movement */
-		document.addEventListener('keydown', e => playerMov.keyPressHandler(e))
-		document.addEventListener('keyup', e => playerMov.keyReleaseHandler(e))		
 
 		socket.on('players', (data: Player[]) => {
 			/** Sends user data to server */
@@ -52,32 +52,58 @@ export default function HomePage() {
 			})
 
 			for (let player of players) {
+				/** Last position */
+				const { x, z } = player.mesh.position
+
 				/** Search new data of this player */
 				const newData: Player | undefined = data.find(newP => newP.id === player.id)
 
 				/** Updates player data (except for the mesh) */
 				if (newData) player = {...newData, mesh: player.mesh}
 
-				if (player.mesh) player.mesh.position.set(player.x, 5, player.y)
+				/** New position (smoothed out) */
+				player.mesh.position.set(
+					smoothOut(x, player.x,6), 
+					5, 
+					smoothOut(z, player.y,6)
+				)
 			}
 
 			for (let player of newPlayers) {
 				const playerMesh = three.createPlayer(0x3333bb)
-				players.push({...player, mesh: playerMesh})
+				nicknames.push(three.createText(player.nickname))
+				players.push({...player, mesh: playerMesh })
 			}
 		})
 	}, [three, loginfo])
 
+	/** TRHEEJS */
 	useEffect(() => {
 		if (!three || !loginfo) return
-		/** TRHEEJS */
-		const userMesh = three.createPlayer(0x33bb33)		
-		three.gridHelper()
+
+		/** Movement */
+		document.addEventListener('keydown', e => playerMov.keyPressHandler(e))
+		document.addEventListener('keyup', e => playerMov.keyReleaseHandler(e))		
+
+		const userMesh = three.createPlayer(0x33bb33)
+		// three.gridHelper()
 		
 		const animate = () => {
 			playerMov.releaseSpeed(0.1)
-			playerMov.update()			
+			playerMov.update()
+
 			userMesh.position.set(playerMov.x, 5, playerMov.y)
+
+			for (let i in players) {
+				let player = players[i]
+				let text = nicknames[i]
+
+				const { x, y, z } = player.mesh.position
+
+				text.position.set(x,y+15,z)
+
+				text.lookAt(three.camera.position)
+			}
 			
 			three.renderLoop(animate)
 		}
@@ -91,7 +117,7 @@ export default function HomePage() {
 	return <>
 		<Head>
 			<title>Hexaverse</title>
-			<meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+			{/* <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" /> */}
 		</Head>
 		<div className={`interface ${loginfo ? 'active' : ''}`}>
 			<form className="login" onSubmit={loginHandler}>
